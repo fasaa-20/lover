@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#b10f22" />
+  <title>Demeter — Mother Concept</title>
+  <style>
+    :root{
+      --bg0:#050203;
+      --bg1:#0b0407;
+      --ink:#f7f1f3;
+      --muted:rgba(247,241,243,.72);
+      --muted2:rgba(247,241,243,.52);
+      --line:rgba(247,241,243,.12);
+
+      --red:#ff234c;
+      --red2:#b10f22;
+      --red3:#6a0612;
+
+      --card:rgba(10,5,8,.62);
+      --glass:rgba(255,255,255,.04);
+      --shadow: 0 24px 80px rgba(0,0,0,.55);
+      --shadow2: 0 12px 34px rgba(0,0,0,.35);
+
+      --r1:18px;
+      --r2:26px;
+
+      --pad: clamp(14px, 3.2vw, 28px);
+      --max: 1180px;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      color:var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:
+        radial-gradient(1200px 900px at 80% 20%, rgba(255,35,76,.18), transparent 55%),
+        radial-gradient(900px 650px at 15% 75%, rgba(177,15,34,.16), transparent 60%),
+        radial-gradient(700px 480px at 90% 80%, rgba(106,6,18,.16), transparent 60%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
+
+    /* subtle grain (pure CSS) */
+    body:before{
+      content:"";
+      position:fixed; inset:0;
+      pointer-events:none;
+      background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,.015) 0 1px, transparent 1px 3px),
+        repeating-linear-gradient(90deg, rgba(255,255,255,.012) 0 1px, transparent 1px 4px);
+      opacity:.35;
+      mix-blend-mode: overlay;
+      z-index:0;
+    }
+
+    .wrap{
+      width:min(var(--max), calc(100% - 2*var(--pad)));
+      margin-inline:auto;
+      position:relative;
+      z-index:1;
+    }
+
+    /* one-page frame */
+    .frame{
+      min-height: 100svh;
+      display:grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 14px;
+      padding: 18px 0 14px;
+    }
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+    }
+
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      user-select:none;
+    }
+    .sig{
+      width:38px; height:38px; border-radius: 14px;
+      border: 1px solid rgba(247,241,243,.14);
+      background:
+        radial-gradient(10px 10px at 25% 25%, rgba(255,255,255,.22), transparent 60%),
+        linear-gradient(135deg, rgba(255,35,76,.85), rgba(177,15,34,.35));
+      box-shadow: 0 14px 40px rgba(255,35,76,.18);
+      position:relative;
+      overflow:hidden;
+    }
+    .sig:after{
+      content:"";
+      position:absolute; inset:-45%;
+      background: conic-gradient(from 220deg, transparent, rgba(255,255,255,.18), transparent);
+      animation: spin 9s linear infinite;
+    }
+    @keyframes spin{ to{ transform: rotate(360deg); } }
+
+    .brand .t1{ margin:0; font-weight:750; letter-spacing:-.02em; font-size: 14px; line-height:1.1; }
+    .brand .t2{ margin:3px 0 0; font-size: 12px; color: var(--muted2); }
+
+    .miniActions{
+      display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;
+    }
+    .pill{
+      display:inline-flex; align-items:center; gap:9px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(247,241,243,.12);
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+      font-size: 12.5px;
+      cursor:pointer;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+      backdrop-filter: blur(10px);
+    }
+    .pill:hover{
+      transform: translateY(-1px);
+      border-color: rgba(255,35,76,.38);
+      background: rgba(255,35,76,.10);
+      color: var(--ink);
+    }
+    .pill.primary{
+      border-color: rgba(255,35,76,.46);
+      background: linear-gradient(135deg, rgba(255,35,76,.22), rgba(177,15,34,.10));
+      box-shadow: 0 16px 34px rgba(177,15,34,.16);
+      color: var(--ink);
+    }
+    .pill svg{ width:16px; height:16px; opacity:.9; }
+
+    /* stage */
+    .stage{
+      border-radius: var(--r2);
+      border: 1px solid rgba(247,241,243,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+      display:grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      min-height: clamp(520px, 78svh, 760px);
+    }
+
+    /* left rail (story navigator) */
+    .rail{
+      padding: clamp(14px, 2.6vw, 22px);
+      border-right: 1px solid rgba(247,241,243,.08);
+      background:
+        radial-gradient(520px 320px at 20% 0%, rgba(255,35,76,.14), transparent 60%),
+        radial-gradient(520px 340px at 0% 80%, rgba(177,15,34,.12), transparent 60%);
+      position:relative;
+    }
+
+    .kicker{
+      display:flex; align-items:center; gap:10px;
+      letter-spacing:.18em;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .kdot{
+      width:8px; height:8px; border-radius:50%;
+      background: var(--red);
+      box-shadow: 0 0 0 8px rgba(255,35,76,.10);
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+    @keyframes pulse{
+      0%,100%{ transform:scale(1); box-shadow: 0 0 0 8px rgba(255,35,76,.10); }
+      50%{ transform:scale(1.15); box-shadow: 0 0 0 13px rgba(255,35,76,.05); }
+    }
+
+    .headline{
+      margin: 14px 0 10px;
+      font-size: clamp(30px, 4.2vw, 50px);
+      line-height: 1.02;
+      letter-spacing: -0.03em;
+      font-weight: 800;
+    }
+    .headline .hot{ color: rgba(255,35,76,.96); text-shadow: 0 16px 50px rgba(255,35,76,.16); }
+
+    .sub{
+      margin: 0 0 16px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 14.5px;
+      max-width: 64ch;
+    }
+
+    .tabs{
+      display:flex;
+      gap: 10px;
+      flex-wrap:wrap;
+      margin-top: 6px;
+    }
+    .tab{
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(247,241,243,.12);
+      background: rgba(0,0,0,.12);
+      color: var(--muted);
+      font-size: 12.5px;
+      cursor:pointer;
+      transition: background .18s ease, transform .18s ease, border-color .18s ease;
+    }
+    .tab:hover{ transform: translateY(-1px); border-color: rgba(255,35,76,.32); }
+    .tab[aria-selected="true"]{
+      color: var(--ink);
+      border-color: rgba(255,35,76,.44);
+      background: rgba(255,35,76,.10);
+      box-shadow: 0 12px 22px rgba(255,35,76,.10);
+    }
+
+    .panelStack{
+      margin-top: 14px;
+      position:relative;
+      min-height: 210px;
+    }
+
+    .storyPanel{
+      position:absolute;
+      inset:0;
+      padding: 14px 14px;
+      border-radius: var(--r1);
+      border: 1px solid rgba(247,241,243,.10);
+      background: rgba(0,0,0,.18);
+      box-shadow: var(--shadow2);
+      opacity:0;
+      transform: translateY(10px);
+      transition: opacity .45s ease, transform .45s ease;
+    }
+    .storyPanel.on{
+      opacity:1;
+      transform: translateY(0);
+    }
+    .storyPanel h3{
+      margin:0 0 8px;
+      font-size: 14.5px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      letter-spacing:-.01em;
+    }
+    .storyPanel h3 svg{ width:18px; height:18px; opacity:.92; }
+    .storyPanel p, .storyPanel ul{
+      margin:0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+    .storyPanel ul{
+      margin-top: 10px;
+      padding-left: 18px;
+    }
+    .storyPanel li{ margin: 6px 0; }
+
+    /* right canvas / product */
+    .showcase{
+      position:relative;
+      padding: clamp(14px, 2.6vw, 22px);
+      display:grid;
+      grid-template-rows: 1fr auto;
+      background:
+        radial-gradient(700px 420px at 70% 20%, rgba(255,35,76,.14), transparent 60%),
+        radial-gradient(600px 480px at 30% 90%, rgba(177,15,34,.12), transparent 60%);
+    }
+
+    .heroArt{
+      position:relative;
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+      border-radius: var(--r2);
+      border: 1px solid rgba(247,241,243,.10);
+      background: linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.08));
+      box-shadow: var(--shadow2);
+    }
+
+    /* minimal symbol orbit */
+    .orbit{
+      position:absolute;
+      width: 340px; height:340px;
+      border-radius:50%;
+      border: 1px dashed rgba(247,241,243,.18);
+      opacity:.7;
+      animation: orbit 22s linear infinite;
+    }
+    .orbit:before{
+      content:"";
+      position:absolute; inset: 20px;
+      border-radius:50%;
+      border: 1px solid rgba(255,35,76,.18);
+    }
+    .orbit:after{
+      content:"";
+      position:absolute;
+      width:10px; height:10px; border-radius:50%;
+      background: rgba(255,35,76,.95);
+      box-shadow: 0 0 0 10px rgba(255,35,76,.10);
+      top: 12px; left: 62%;
+    }
+    @keyframes orbit{ to{ transform: rotate(360deg);} }
+
+    /* “backless” result: we render a transparent canvas (white removed) */
+    #cutCanvas{
+      width: min(360px, 78%);
+      height: auto;
+      aspect-ratio: 3 / 4;
+      filter: drop-shadow(0 28px 70px rgba(0,0,0,.55));
+      transform-origin: 50% 55%;
+      animation: floaty 6.2s ease-in-out infinite;
+      will-change: transform;
+    }
+    @keyframes floaty{
+      0%,100%{ transform: translateY(2px) rotate(-0.8deg); }
+      50%{ transform: translateY(-7px) rotate(0.9deg); }
+    }
+
+    .metaRow{
+      margin-top: 12px;
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+    .meta{
+      border-radius: 16px;
+      border: 1px solid rgba(247,241,243,.10);
+      background: rgba(0,0,0,.14);
+      padding: 12px;
+      box-shadow: var(--shadow2);
+    }
+    .meta .l{ font-size: 11px; letter-spacing:.16em; text-transform:uppercase; color: var(--muted2); }
+    .meta .v{ margin-top: 6px; font-weight: 720; font-size: 14px; }
+
+    footer{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      color: var(--muted2);
+      font-size: 12px;
+      padding: 0 2px;
+      flex-wrap:wrap;
+    }
+    .line{
+      width: 52px; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,35,76,.6), transparent);
+      display:inline-block;
+      vertical-align:middle;
+      margin: 0 8px;
+    }
+
+    /* modal */
+    .modal{
+      position:fixed; inset:0;
+      display:none;
+      place-items:center;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(10px);
+      z-index: 99;
+      padding: 16px;
+    }
+    .modal.on{ display:grid; }
+    .sheet{
+      width: min(780px, 96vw);
+      border-radius: 26px;
+      border: 1px solid rgba(247,241,243,.12);
+      background: linear-gradient(180deg, rgba(10,5,8,.78), rgba(10,5,8,.58));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .sheetTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(247,241,243,.08);
+    }
+    .sheetTop strong{ font-weight:800; }
+    .x{
+      width: 38px; height:38px;
+      border-radius: 14px;
+      border: 1px solid rgba(247,241,243,.12);
+      background: rgba(255,255,255,.04);
+      color: var(--ink);
+      cursor:pointer;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease;
+    }
+    .x:hover{
+      transform: translateY(-1px);
+      border-color: rgba(255,35,76,.35);
+      background: rgba(255,35,76,.10);
+    }
+    .sheetBody{
+      padding: 14px 16px 16px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .infoCard{
+      border-radius: 20px;
+      border: 1px solid rgba(247,241,243,.10);
+      background: rgba(0,0,0,.16);
+      padding: 14px;
+    }
+    .infoCard h4{ margin:0 0 10px; font-size: 14px; letter-spacing:-.01em; }
+    .infoCard p, .infoCard ul{ margin:0; color: var(--muted); line-height:1.55; font-size: 14px; }
+    .infoCard ul{ padding-left: 18px; margin-top: 8px; }
+    .infoCard li{ margin: 6px 0; }
+    .em{ color: rgba(255,35,76,.95); font-weight: 780; }
+
+    /* responsive */
+    @media (max-width: 980px){
+      .stage{ grid-template-columns: 1fr; }
+      .rail{ border-right:0; border-bottom: 1px solid rgba(247,241,243,.08); }
+      .sheetBody{ grid-template-columns: 1fr; }
+      .metaRow{ grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce){
+      *{ animation:none !important; transition:none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap frame">
+    <header>
+      <div class="brand">
+        <div class="sig" aria-hidden="true"></div>
+        <div>
+          <p class="t1">Demeter — Mother Concept</p>
+          
+        </div>
+      </div>
+
+      <div class="miniActions">
+        <button class="pill" id="btnSpecs" type="button" title="Open information">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M7 4h10a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M9 8h6M9 12h6M9 16h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          Information
+        </button>
+
+        <button class="pill primary" id="btnVow" type="button" title=" mother concept">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 21s-7-4.6-9.4-9.1C.6 8 .9 5.4 2.8 3.7 4.8 2 7.7 2.3 9.4 4c.7.7 1.2 1.6 2.6 1.6S14 4.7 14.6 4c1.7-1.7 4.6-2 6.6-.3 1.9 1.7 2.2 4.3.2 8.2C19 16.4 12 21 12 21Z" stroke="currentColor" stroke-width="1.6"/>
+          </svg>
+         
+        </button>
+      </div>
+    </header>
+
+    <section class="stage" aria-label="Demeter one-page experience">
+      <!-- Left: story rail -->
+      <div class="rail">
+        <div class="kicker">
+          <span class="kdot" aria-hidden="true"></span>
+          <span>From myth → to city → to you</span>
+        </div>
+
+        <h1 class="headline">
+          Motherhood as <span class="hot">quiet power</span>.
+        </h1>
+
+        <p class="sub">
+          Crafted entirely from <strong>925 sterling silver</strong>, inspired by Demeter —
+          goddess of fertility, nourishment, protection. Here she isn’t distant mythology,
+          but a living presence: care, patience, resilience.
+        </p>
+
+        <div class="tabs" role="tablist" aria-label="Story tabs">
+          <button class="tab" role="tab" aria-selected="true" data-tab="0">Demeter</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="1">Mother concept</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="2">Liverpool</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="3">Vow</button>
+        </div>
+
+        <div class="panelStack" aria-live="polite">
+          <article class="storyPanel on" data-panel="0">
+            <h3>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 21c4.4 0 8-3.6 8-8V9c0-4.4-3.6-8-8-8S4 4.6 4 9v4c0 4.4 3.6 8 8 8Z" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M9 12c1.2 1.1 2.8 1.1 6 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+              Demeter, made human
+            </h3>
+            <p>
+              Demeter is motherhood without theatrics. Presence. The steady kind.
+              The one that turns chaos into growth.
+            </p>
+            <ul>
+              <li>Pregnancy, care, nourishment.</li>
+              <li>Protection that feels like warmth.</li>
+              <li>Strength that doesn’t need force.</li>
+            </ul>
+          </article>
+
+          <article class="storyPanel" data-panel="1">
+            <h3>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 3v18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                <path d="M6 9c2-2 10-2 12 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                <path d="M6 15c2 2 10 2 12 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+              Mother concept
+            </h3>
+            <p>
+              A collection that honours unconditional love, devotion, and quiet strength.
+              This piece reflects support through hardship — the invisible work that holds everything up.
+            </p>
+            <ul>
+              <li>Emotional support.</li>
+              <li>Instinct to protect and provide.</li>
+              <li>Resilience expressed as patience.</li>
+            </ul>
+          </article>
+
+          <article class="storyPanel" data-panel="2">
+            <h3>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M3 20h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                <path d="M5 20V10l7-6 7 6v10" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                <path d="M10 20v-6h4v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              </svg>
+              Why Liverpool fits
+            </h3>
+            <p>
+              Liverpool is built on strong families and powerful women. Behind the bold character:
+              loyalty, care, community — Demeter’s spirit in street-level reality.
+            </p>
+            <ul>
+              <li>Carry responsibility with pride.</li>
+              <li>Support loved ones through difficulty.</li>
+              <li>Turn hardship into strength.</li>
+            </ul>
+          </article>
+
+          <article class="storyPanel" data-panel="3">
+            <h3>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3 3-7Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              </svg>
+              A vow you can wear
+            </h3>
+            <p>
+              Handmade. Meaningful. Timeless. A symbol of devotion and calm power —
+              carried quietly, felt loudly.
+            </p>
+            <ul>
+              <li>Fine craftsmanship in <span class="em">925</span>.</li>
+              <li>Love, resilience, protection.</li>
+              <li>A story that travels with you.</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+
+      <!-- Right: product showcase -->
+      <div class="showcase">
+        <div class="heroArt" id="heroArt" aria-label="Product cutout display">
+          <div class="orbit" aria-hidden="true"></div>
+
+          <!-- The image has a white background; we remove it in JS and draw to this transparent canvas -->
+          <canvas id="cutCanvas" width="900" height="1200" aria-label="Backless (transparent) product image"></canvas>
+
+          <!-- hidden source image -->
+          <img id="srcImg" src="photo_5920340087004663352_y.jpg" alt="" style="display:none" />
+        </div>
+
+        <div class="metaRow" aria-label="Quick info">
+          <div class="meta">
+            <div class="l">Material</div>
+            <div class="v">925 Sterling Silver</div>
+          </div>
+          <div class="meta">
+            <div class="l">Weight</div>
+            <div class="v">10.6 g</div>
+          </div>
+          <div class="meta">
+            <div class="l">Stone</div>
+            <div class="v">Crafted atomic stone</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div>© <span id="yr"></span> Demeter — Mother Concept <span class="line"></span> </div>
+      <div>Handmade • Meaningful • Timeless</div>
+    </footer>
+  </div>
+
+  <!-- modal -->
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Information modal">
+    <div class="sheet">
+      <div class="sheetTop">
+        <strong>Information</strong>
+        <button class="x" id="close" type="button" aria-label="Close">
+          ✕
+        </button>
+      </div>
+      <div class="sheetBody">
+        <div class="infoCard">
+          <h4>Piece details</h4>
+          <ul>
+            <li><strong>Lovers Couple Ring</strong>: weight <strong>10.6 g</strong></li>
+            <li>Set with a <strong>crafted atomic stone</strong></li>
+            <li>Crafted entirely from <strong>925 sterling silver</strong></li>
+          </ul>
+        </div>
+        <div class="infoCard">
+          <h4>Meaning</h4>
+          <p>
+            Demeter here is not distant mythology, but a living presence:
+            the kind of strength expressed through <span class="em">patience</span>,
+            <span class="em">love</span>, and <span class="em">resilience</span>.
+          </p>
+          <p style="margin-top:10px">
+            A wearable symbol for mothers, partners, and caregivers — the unseen foundations of a city.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Year
+    document.getElementById("yr").textContent = new Date().getFullYear();
+
+    // Tabs -> panels
+    const tabs = [...document.querySelectorAll(".tab")];
+    const panels = [...document.querySelectorAll(".storyPanel")];
+    function setTab(i){
+      tabs.forEach((t, idx) => t.setAttribute("aria-selected", idx === i ? "true" : "false"));
+      panels.forEach(p => p.classList.toggle("on", Number(p.dataset.panel) === i));
+    }
+    tabs.forEach(t => t.addEventListener("click", () => setTab(Number(t.dataset.tab))));
+    document.getElementById("btnVow").addEventListener("click", () => setTab(1));
+
+    // Modal
+    const modal = document.getElementById("modal");
+    const openModal = () => modal.classList.add("on");
+    const closeModal = () => modal.classList.remove("on");
+    document.getElementById("btnSpecs").addEventListener("click", openModal);
+    document.getElementById("close").addEventListener("click", closeModal);
+    modal.addEventListener("click", (e) => { if(e.target === modal) closeModal(); });
+    window.addEventListener("keydown", (e) => { if(e.key === "Escape") closeModal(); });
+
+    // Subtle tilt on the showcase (different vibe, very “gallery”)
+    const art = document.getElementById("heroArt");
+    const canvas = document.getElementById("cutCanvas");
+    let raf = null;
+    art.addEventListener("pointermove", (e) => {
+      const r = art.getBoundingClientRect();
+      const x = ((e.clientX - r.left) / r.width) * 2 - 1;
+      const y = ((e.clientY - r.top) / r.height) * 2 - 1;
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        canvas.style.transform = `translateY(${(-4*y).toFixed(1)}px) rotate(${(0.8*x).toFixed(2)}deg)`;
+      });
+    });
+    art.addEventListener("pointerleave", () => canvas.style.transform = "");
+
+    /* ------------------------------------------------------------
+       BACKLESS PHOTO (transparent) via JS "white removal" (chroma-key)
+       - Loads the provided JPG
+       - Removes near-white pixels by setting alpha to 0
+       - Draws a clean cutout to canvas (transparent background)
+       ------------------------------------------------------------ */
+    const img = document.getElementById("srcImg");
+    const ctx = canvas.getContext("2d", { willReadFrequently:true });
+
+    function removeWhiteToAlpha(imageData, threshold = 245, softness = 22){
+      const d = imageData.data;
+      for (let i = 0; i < d.length; i += 4){
+        const r = d[i], g = d[i+1], b = d[i+2];
+        // “how close to white”
+        const min = Math.min(r,g,b);
+        const max = Math.max(r,g,b);
+        const nearWhite = (min > threshold) && (max - min < 18); // mostly neutral whites
+        if (nearWhite){
+          // fully transparent
+          d[i+3] = 0;
+        } else {
+          // soften edges: if it's very bright, reduce alpha slightly
+          const lum = 0.2126*r + 0.7152*g + 0.0722*b;
+          const over = Math.max(0, lum - (threshold - softness));
+          const fade = Math.min(1, over / (softness*2));
+          if (fade > 0){
+            d[i+3] = Math.round(d[i+3] * (1 - 0.65*fade));
+          }
+        }
+      }
+      return imageData;
+    }
+
+    function fitContain(srcW, srcH, dstW, dstH){
+      const s = Math.min(dstW/srcW, dstH/srcH);
+      const w = srcW*s, h = srcH*s;
+      return { x:(dstW-w)/2, y:(dstH-h)/2, w, h };
+    }
+
+    function renderBackless(){
+      // Clean transparent canvas
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+
+      // Draw source to offscreen for pixel work
+      const off = document.createElement("canvas");
+      off.width = canvas.width;
+      off.height = canvas.height;
+      const octx = off.getContext("2d", { willReadFrequently:true });
+
+      const box = fitContain(img.naturalWidth, img.naturalHeight, off.width, off.height);
+      octx.clearRect(0,0,off.width,off.height);
+      octx.drawImage(img, box.x, box.y, box.w, box.h);
+
+      let id = octx.getImageData(0,0,off.width,off.height);
+      id = removeWhiteToAlpha(id, 245, 22);
+      octx.putImageData(id,0,0);
+
+      // Draw final to visible canvas
+      ctx.drawImage(off, 0, 0);
+
+      // optional: tiny highlight bloom by drawing a soft red aura behind
+      ctx.save();
+      ctx.globalCompositeOperation = "destination-over";
+      ctx.filter = "blur(18px)";
+      ctx.globalAlpha = 0.22;
+      ctx.fillStyle = "rgba(255,35,76,0.9)";
+      // simple aura ellipse
+      ctx.beginPath();
+      ctx.ellipse(canvas.width*0.52, canvas.height*0.60, canvas.width*0.20, canvas.height*0.28, 0.2, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    img.addEventListener("load", renderBackless);
+
+    // If the image is already cached:
+    if (img.complete && img.naturalWidth) renderBackless();
+  </script>
+</body>
+</html>
